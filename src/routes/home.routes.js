@@ -1,14 +1,43 @@
-import { useContext } from "react"
+import { useContext, useEffect, useState } from "react"
 import styled from "styled-components"
 import logout from "../assets/logout.svg"
 import add from "../assets/add.svg"
 import remove from "../assets/remove.svg"
-import { AuthContext } from "../components/Globlal"
+import { apiURL, AuthContext } from "../components/Globlal"
 import { useNavigate } from "react-router-dom"
+import axios from "axios"
 
 export default function HomePage(){
     const navigate = useNavigate()
     const [user, setUser] = useContext(AuthContext)
+    const [list, setList] = useState(false)
+
+    useEffect(()=>{
+        const URL = apiURL+"posts"
+        const config = {
+            headers: {'Authorization': 'Bearer ' + user.token}
+        }
+
+        const promise = axios.get(URL, config)
+        
+        promise.then((a)=>{
+            setList(a.data)
+        })
+        promise.catch((a)=>{
+            const msg = a.response;
+            alert(msg)
+            console.log(user.token)
+        })
+    },[])
+
+    function ReadList(){
+        return list.map((item) => (
+            <span>
+                <h3>{item.desc}</h3>
+                <h3 className={item.type}>{"R$"+item.value.toFixed(2)}</h3>
+            </span>
+        ))
+    }
 
     return (
         <HomeStyle 
@@ -21,7 +50,7 @@ export default function HomePage(){
                 />
             </div>
             <div className="history">
-                Não há registros de entrada ou saída
+                {list === false ? "Não há registros de entrada ou saída" : <ReadList/>}
             </div>
             <div className="buttons">
                 <button
@@ -68,6 +97,23 @@ const HomeStyle = styled.div`
         flex-direction: column;
         justify-content: ${props => props.state};
         align-items: center;
+
+        span{
+            width: 80%;
+            justify-content: space-between;
+            display: flex;
+            gap: 8px;
+
+            h3{
+                color: gray;
+            }
+            .add{
+                color: green;
+            }
+            .remove{
+                color: red;
+            }
+        }
     }
     .buttons{
         height: 25%;
